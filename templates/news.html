@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI-Powered Journalism</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background-color: #f4f6f9;
+        }
+
+        header {
+            background: #1e1e2f;
+            color: white;
+            padding: 16px 24px;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        /* ---------- USER INPUT ---------- */
+        .user-input {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+
+        .user-input input {
+            width: 75%;
+            padding: 10px;
+            font-size: 15px;
+        }
+
+        .user-input button {
+            padding: 10px 16px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-left: 8px;
+        }
+
+        /* ---------- NEWS CARD ---------- */
+        .news-card {
+            background: white;
+            padding: 18px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .news-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        .news-text {
+            color: #444;
+            margin-bottom: 10px;
+        }
+
+        .sentiment {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .positive { color: green; }
+        .negative { color: red; }
+        .neutral { color: gray; }
+
+        .chat-btn {
+            padding: 8px 14px;
+            background: #111827;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>📰 AI-Powered Journalism Dashboard</header>
+
+<div class="container">
+
+    <!-- USER NEWS INPUT -->
+    <div class="user-input">
+        <h3>Analyze Your Own News</h3>
+        <input type="text" id="newsUrl" placeholder="Paste any news article URL here">
+        <button onclick="loadUserNews()">Analyze</button>
+    </div>
+
+    <!-- NEWS LIST -->
+    <h2>Top Global News (Longest First)</h2>
+    <div id="articles">Loading news...</div>
+
+</div>
+
+<script>
+fetch("http://127.0.0.1:8000/scrap")
+.then(res => res.json())
+.then(data => {
+    const container = document.getElementById("articles");
+    container.innerHTML = "";
+
+    localStorage.setItem("articles", JSON.stringify(data));
+
+    data.forEach((article, index) => {
+
+        let sentimentClass = "neutral";
+        if (article.sentiment === "POSITIVE") sentimentClass = "positive";
+        if (article.sentiment === "NEGATIVE") sentimentClass = "negative";
+
+        const div = document.createElement("div");
+        div.className = "news-card";
+
+        div.innerHTML = `
+            <div class="news-title">${article.title}</div>
+            <div class="news-text">${article.text.substring(0, 300)}...</div>
+            <div class="sentiment ${sentimentClass}">
+                Sentiment: ${article.sentiment} (${article.score})
+            </div>
+            <button class="chat-btn" onclick="openChat(${index})">
+                Chat & Analyze
+            </button>
+        `;
+
+        container.appendChild(div);
+    });
+})
+.catch(err => {
+    document.getElementById("articles").innerText = "Failed to load news";
+    console.error(err);
+});
+
+function openChat(index) {
+    const articles = JSON.parse(localStorage.getItem("articles"));
+    localStorage.setItem("article_text", articles[index].text);
+    window.location.href = "http://127.0.0.1:8000/chat-page";
+}
+
+function loadUserNews() {
+    const url = document.getElementById("newsUrl").value;
+    if (!url) return alert("Please enter a news URL");
+
+    const form = new FormData();
+    form.append("news_url", url);
+
+    fetch("http://127.0.0.1:8000/user-news", {
+        method: "POST",
+        body: form
+    })
+    .then(res => res.json())
+    .then(data => {
+        localStorage.setItem("article_text", data.text);
+        window.location.href = "http://127.0.0.1:8000/chat-page";
+    })
+    .catch(() => alert("Invalid news URL"));
+}
+</script>
+
+</body>
+</html>

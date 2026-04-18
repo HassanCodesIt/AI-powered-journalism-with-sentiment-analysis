@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat</title>
+</head>
+<body>
+
+<h2>Article</h2>
+<p id="article"></p>
+
+<button onclick="summarize()">Summarize</button>
+
+<h3>Summary</h3>
+<pre id="summary"></pre>
+
+<h3>Ask Question</h3>
+<textarea id="question" rows="4" cols="50"></textarea><br>
+<button onclick="ask()">Ask</button>
+
+<h3>Answer</h3>
+<pre id="answer"></pre>
+
+<script>
+const articleText = localStorage.getItem("article_text");
+
+if (!articleText) {
+    document.body.innerHTML = "<h3>No article selected</h3>";
+}
+
+document.getElementById("article").innerText = articleText;
+
+function summarize() {
+    const form = new FormData();
+    form.append("article_text", articleText);
+
+    fetch("http://127.0.0.1:8000/summarize", {
+        method: "POST",
+        body: form
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("summary").innerText = data.summary;
+    });
+}
+
+function ask() {
+    const question = document.getElementById("question").value;
+
+    const form = new FormData();
+    form.append("article_text", articleText);
+    form.append("question", question);
+
+    fetch("http://127.0.0.1:8000/chat", {
+        method: "POST",
+        body: form
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("answer").innerText = data.answer;
+    });
+}
+</script>
+
+</body>
+</html>
