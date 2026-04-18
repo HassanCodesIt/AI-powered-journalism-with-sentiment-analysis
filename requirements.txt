@@ -1,0 +1,10 @@
+fastapi==0.115.8
+uvicorn==0.34.0
+python-multipart==0.0.22
+groq==0.18.0
+newspaper3k==0.2.8
+feedparser==6.0.11
+python-dotenv==1.0.1
+transformers==4.48.3
+torch==2.6.0
+lxml_html_clean==0.4.1
